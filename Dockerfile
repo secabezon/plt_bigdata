@@ -1,9 +1,9 @@
 FROM python:3.12-slim
 
-COPY ./app /app
+COPY ./app/requirements.txt /app/requirements.txt
 
 WORKDIR /app
 
 RUN pip install -r requirements.txt
 
-CMD ["python", "execute_model_mlflow.py"]
+CMD ["mlflow","ui","--host","0.0.0.0","--port","5000"]

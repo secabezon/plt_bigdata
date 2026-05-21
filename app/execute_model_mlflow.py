@@ -7,8 +7,10 @@ from sklearn.linear_model._bayes import BayesianRidge
 from sklearn.ensemble._forest import RandomForestRegressor
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import OneHotEncoder, MinMaxScaler
+import mlflow
+from sklearn.metrics import mean_squared_error, r2_score
 
-df=pd.read_csv('data/train.csv')
+df=pd.read_csv('app/data/train.csv')
 
 def transform_running(run):
     if run[-2:]=='km':
@@ -53,26 +55,50 @@ X_test = pd.DataFrame(
     scaler.transform(X_test),
     columns=X_train.columns
 )
+params = {
+    "n_estimators": 100,
+    "random_state": 123,
+    "epsilon": 5,
+    "max_iter": 100,
+    "alpha": 0.01
+}
 
-Rdm_frst=RandomForestRegressor(n_estimators=100,random_state=123)
-Rdm_frst.fit(X_train,y=Y_train)
-
-pred_rf = Rdm_frst.predict(X_test)
-
-HbrRgrssr=HuberRegressor(epsilon=5, max_iter=100, alpha=0.01)
-HbrRgrssr.fit(X_train,y=Y_train)
-
-pred_hbr = HbrRgrssr.predict(X_test)
-
-ByssnRdg=BayesianRidge()
-ByssnRdg.fit(X_train,y=Y_train)
-
-pred_bysn = ByssnRdg.predict(X_test)
-
-EtrsRgsr=ExtraTreesRegressor(n_estimators=100, random_state=123)
-EtrsRgsr.fit(X_train,y=Y_train)
-
-pred_extr = EtrsRgsr.predict(X_test)
+params = {
+    "n_estimators": 50,
+    "random_state": 30,
+    "epsilon": 10,
+    "max_iter": 200,
+    "alpha": 0.00001
+}
 
 
-print('Finaliza bien')
+# 2. Instanciar los modelos en un diccionario
+modelos = {
+    "RandomForest": RandomForestRegressor(n_estimators=params["n_estimators"], random_state=params["random_state"]),
+    "Huber": HuberRegressor(epsilon=params["epsilon"], max_iter=params["max_iter"], alpha=params["alpha"]),
+    "BayesianRidge": BayesianRidge(),
+    "ExtraTrees": ExtraTreesRegressor(n_estimators=params["n_estimators"], random_state=params["random_state"])
+}
+
+mlflow.set_tracking_uri("http://127.0.0.1:5000")
+
+mlflow.set_experiment("car_values")
+for nombre_modelo, modelo in modelos.items():
+    
+    with mlflow.start_run(run_name=nombre_modelo):
+
+        
+        mlflow.log_params(params)
+        
+        modelo.fit(X_train, y=Y_train)
+        
+        predicciones = modelo.predict(X_test)
+        
+        mse = mean_squared_error(Y_test, predicciones)
+        r2 = r2_score(Y_test, predicciones)
+        
+        mlflow.log_metric("mse", mse)
+        mlflow.log_metric("r2_score", r2)
+        
+        mlflow.sklearn.log_model(modelo, f"modelo_{nombre_modelo}")
+        
