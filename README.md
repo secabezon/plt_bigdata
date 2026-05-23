@@ -24,7 +24,6 @@ mlflow ui --backend-store-uri sqlite:///mlflow.db
 
 python .\app\execute_model_mlflow.py
 
-
 python .\app\generate_batch.py
 
 ## MODEL SERVE
