@@ -1,6 +1,6 @@
 
 import pandas as pd
-
+import joblib
 from sklearn.linear_model._huber import HuberRegressor
 from sklearn.ensemble._forest import ExtraTreesRegressor
 from sklearn.linear_model._bayes import BayesianRidge
@@ -10,7 +10,7 @@ from sklearn.preprocessing import OneHotEncoder, MinMaxScaler
 import mlflow
 from sklearn.metrics import mean_squared_error, r2_score
 
-df=pd.read_csv('app/data/train.csv')
+df=pd.read_csv('app/data/data.csv')
 
 def transform_running(run):
     if run[-2:]=='km':
@@ -55,6 +55,8 @@ X_test = pd.DataFrame(
     scaler.transform(X_test),
     columns=X_train.columns
 )
+
+joblib.dump(scaler, 'scaler_entrenado.pkl')
 params = {
     "n_estimators": 100,
     "random_state": 123,
@@ -63,13 +65,13 @@ params = {
     "alpha": 0.01
 }
 
-params = {
-    "n_estimators": 50,
-    "random_state": 30,
-    "epsilon": 10,
-    "max_iter": 200,
-    "alpha": 0.00001
-}
+# params = {
+#     "n_estimators": 50,
+#     "random_state": 30,
+#     "epsilon": 10,
+#     "max_iter": 200,
+#     "alpha": 0.00001
+# }
 
 
 # 2. Instanciar los modelos en un diccionario
